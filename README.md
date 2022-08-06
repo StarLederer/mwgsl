@@ -6,7 +6,7 @@ Meta/Macro/Modular WGSL. A superset of WGSL that introduces compile-time macros 
 
 *Note: this document uses Javascript syntax highlighting, which is of course, incorrect, but works better than no highlighing at all.*
 
-## Motivation.
+## Motivation
 
 This language is inspired by commonly used C-like shader preprocessors and by the mistakes those preproocessors make. MWGSL is intended to achieve the same end result and replace C-like preprocessors but with a better DX and a modern, robust and Rust-like approach. This language also learns from operation of ECMAScript bundlers such as [ESBuild](https://esbuild.github.io/) since they solve an alsmot identical problem and do it an a very develoepr-friendly way.
 
