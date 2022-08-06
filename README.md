@@ -35,6 +35,10 @@ Spread macro. The key building block of MWGSL. Inserts the value passed to the m
 
 *Bikesheding material: Can be replaced with <- and renamed to "insert" macro*
 
+```js
+...(SPREADALE_MWGSL_OBJECT);
+```
+
 ### void!
 
 Represents nothing to spread. Only useful internally for if! macros.
@@ -110,7 +114,7 @@ fn foo () {
         a += b;
     };
 
-    var c: f32 = ...s;
+    ...s;
 }
 ```
 
