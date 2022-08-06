@@ -6,6 +6,23 @@ Meta/Macro/Modular WGSL. A superset of WGSL that introduces compile-time macros 
 
 *Note: this document uses Javascript syntax highlighting, which is of course, incorrect, but works better than no highlighing at all.*
 
+## Motivation.
+
+This language is inspired by commonly used C-like shader preprocessors and by the mistakes those preproocessors make. MWGSL is intended to achieve the same end result and replace C-like preprocessors but with a better DX and a modern, robust and Rust-like approach. This language also learns from operation of ECMAScript bundlers such as [ESBuild](https://esbuild.github.io/) since they solve an alsmot identical problem and do it an a very develoepr-friendly way.
+
+### Why do I want MWGSL over a C-like preprocessor
+
+* **Named imports instead of file inclusion.** This means develoeprs have the ability to filter and alias what they import and avoid unwanted and unexpected code insertions into their programs.
+* **Explicit or automatic identifier names.** Imported identifiers are explicitly stated and optinally aliased, and ones that are used internally (e.g a function that is called from an exported function) are renamed automatically based on which file they come from. This makes it impossible to ever have a name conflict (between dependencies of imported objects or user-defined ones).
+* **The spread macro.** Named imports make it impossible to just insert the exports wherever they are imported but that is good news. Since there is a community need to include order-dependent definitions such as resource variables MWGSL allows that, but makes it madatory for developers to explicitly state where in their code such definitons must end up. This means that developers have control over order-dependent exports from included modules and are forced to be aware of them.
+* **if? instead of #ifdef**. MWGSL uses a different vaiant building mechanism which is the if? macro. Unlike #ifdef, if? Does not include any code into the final shader but instead returns a spreadable WGSL object (most commonly a scope! or void!) which, depending on the use, is much closer to how an acual WGSL if statement would work (scoping instructions inside the satement), or can act as a compile-time turnary operator (for example, when optionally compiling function parameters).
+* **Including arbitrary/invaid code is impossible**. Horrible code practices such as starting a function in one #include and finishing it in another are syntactically impossible. 
+* **Rust inspired syntaxt** (as opposed to C; for a more civilized age).
+
+### Why do I want a shader preprocessor at all
+
+* TODO.
+
 ## Propesed syntax additions
 
 This section describes proposed macros, which are syntactical additions to WGSL.
@@ -67,7 +84,7 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
 
 ### struct!
 
-Returns a structure meant to be spread into regular WGSL structs;
+Returns a structure meant to be spread into regular WGSL structs.
 
 ```js
 struct! {
