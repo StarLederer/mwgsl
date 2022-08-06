@@ -1,15 +1,25 @@
-# Available syntax
+# MWGSL
 
-## import
+MWGSL is a superset of WGSL and is a compile time macro lagnuage.
 
-Bring named exports into the shader module.
+*Note: This document is works in progress.*
+
+*Note: this document uses Javascript syntax highlighting, which is of course, incorrect, but works bettert than no highlighing at all.*
+
+## Propesed syntax additions
+
+This section describes proposed macros, which are syntactical additions to WGSL.
+
+### import
+
+Brings named exports into the shader module.
 
 ```js
 import { EXPORT_NAME } from "file/path.mwgsl";
 import { EXPORT_NAME_1, EXPORT_NAME2_ } from "file/path.mwgsl";
 ```
 
-## export
+### export
 
 Indicates to other modules that listed exports can be imported.
 
@@ -17,7 +27,7 @@ Indicates to other modules that listed exports can be imported.
 export { EXPORT_NAME };
 ```
 
-## ...
+### ...
 
 Spread macro. The key building block of MWGSL. Inserts the value passed to the macro during compilation into the shader.
 
@@ -25,7 +35,7 @@ Spread macro. The key building block of MWGSL. Inserts the value passed to the m
 
 *Bikesheding material: Can be replaced with <- and renamed to "insert" macro*
 
-## void!
+### void!
 
 Represents nothing to spread. Only useful internally for if! macros.
 
@@ -51,7 +61,7 @@ fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
 }
 ```
 
-## struct!
+### struct!
 
 Returns a structure meant to be spread into regular WGSL structs;
 
@@ -78,7 +88,7 @@ struct FragmentInput {
 };
 ```
 
-## scope!
+### scope!
 
 Represents an WGSL scope and tokens inside it.
 
@@ -119,7 +129,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 
 *Note: scopes! can only be declared inside functions and therefore cannot be exported.*
 
-## var!
+### var!
 
 Represents a variable definition. Mainly useful for resource definitions.
 
@@ -141,7 +151,7 @@ var<uniform> material: MaterialData;
 
 ```
 
-## if? and else?
+### if? and else?
 
 Returns RETURN_VALUE to compilation if DEFINITION exists.
 
