@@ -41,7 +41,7 @@ Spread macro. The key building block of MWGSL. Inserts the value passed to the m
 
 ### void!
 
-Represents nothing to spread. Only useful internally for if! macros.
+Represents nothing to spread. Only useful internally for if? macros.
 
 ```js
 ...void!;
