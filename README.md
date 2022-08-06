@@ -170,19 +170,19 @@ if? (DEFINITION) RETURN_VALUE_1;
 else? RETURN_VALUE_2;
 ```
 
-Executes macro code inside the {} block and returns the tail ("functional_expression" in this case) to compilation if DEFINITION exists, otherwise returns void!.
+Executes macro code inside the {} block and returns the tail ("s" in this case) to compilation if DEFINITION exists, otherwise returns void!.
 
 ```js
 fn foo() {
     var a = 2.0;
     ...if! (DEFINITION) {
-        fe! fn_expr = fe! {
+        scope! s = scope! {
             // a WGSL function body
             var b = 2.0;
-            return a + b;
+            a = a * b;
         };
 
-        functional_expression
+        s
     };
 }
 ```
