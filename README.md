@@ -4,7 +4,7 @@ Meta/Macro/Modular WGSL. A superset of WGSL that introduces compile-time macros 
 
 *Note: This document is works in progress.*
 
-*Note: this document uses Javascript syntax highlighting, which is of course, incorrect, but works bettert than no highlighing at all.*
+*Note: this document uses Javascript syntax highlighting, which is of course, incorrect, but works better than no highlighing at all.*
 
 ## Propesed syntax additions
 
