@@ -1,6 +1,6 @@
 # MWGSL
 
-MWGSL is a superset of WGSL and is a compile time macro lagnuage.
+Meta/Macro/Modular WGSL. A superset of WGSL that introduces compile-time macros to help you build statically-analyzed DRY shader programs in WGSL.
 
 *Note: This document is works in progress.*
 
