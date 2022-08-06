@@ -103,8 +103,6 @@ scope! s = scope! {
 };
 ```
 
-Scopes cancontain
-
 ```js
 fn foo () {
     var a: f32 = 2.0;
