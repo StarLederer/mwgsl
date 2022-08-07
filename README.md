@@ -1,42 +1,37 @@
 # MWGSL
 
-Meta/Macro/Modular WGSL. A superset of WGSL that introduces compile-time macros to help you build statically-analyzed DRY shader programs in WGSL.
+Modular WGSL. A superset of WGSL that introduces syntax that allows developers to split WGSL and share parts between different files as well as some new useful attributes such as @cfg. While in theory this language can be compiled natively, it is mainly designed to be bundled and transpiled into vanilla WGSL.This document describes a different version of the language that was presented recently. The original document can be found in the ./drafts directory.
 
 *Note: This document is works in progress.*
 
-*Note: this document uses Javascript syntax highlighting, which is of course, incorrect, but works better than no highlighing at all.*
+*Note: This document uses Javascript syntax highlighting which is, of course, incorrect, but works better than no highlighting at all.*
 
-## Motivation
+## 1 Motivation
 
-This language is inspired by commonly used C-like shader preprocessors and by the mistakes those preproocessors make. MWGSL is intended to achieve the same end result and replace C-like preprocessors but with a better DX and a modern, robust and Rust-like approach. This language also learns from operation of ECMAScript bundlers such as [ESBuild](https://esbuild.github.io/) since they solve an alsmot identical problem and do it an a very develoepr-friendly way.
+This language is inspired by commonly used C-like shader preprocessors and by the mistakes those preproocessors make. MWGSL is intended to achieve the same end result and replace C-like preprocessors but with a better DX and a modern, robust and Rust-like approach. This language also learns from the operation of ECMAScript bundlers such as [ESBuild](https://esbuild.github.io/) since they solve an almost identical problem and do it in a very developer-friendly way.
 
-### Why do I want MWGSL over a C-like preprocessor
+### 1.1 Why do I want MWGSL over a C-like preprocessor
 
-* **Named imports instead of file inclusion.** This means developers have the ability to filter and alias what they import and avoid unwanted and unexpected code insertions into their programs.
-* **Explicit or automatic identifier names.** Imported identifiers are explicitly stated and optionally aliased, and ones that are used internally (e.g a function that is called from an exported function) are renamed automatically based on which file they come from. This makes it impossible to ever have a name conflict (between dependencies of imported objects or user-defined ones).
-* **The spread macro.** Named imports make it impossible to just insert the exports wherever they are imported but that is good news. Since there is a community need to include order-dependent definitions such as resource variables MWGSL allows that, but makes it mandatory for developers to explicitly state where in their code such definitions must end up. This means that developers have control over order-dependent exports from included modules and are forced to be aware of them.
-* **if? instead of #ifdef**. MWGSL uses a different variant building mechanism which is the if? macro. Unlike #ifdef, if? Does not include any code into the final shader but instead returns a spreadable MWGSL object (most commonly a scope! or void!) which, depending on the use, is much closer to how an actual WGSL if statement would work (scoping instructions inside the statement), or can act as a compile-time ternary operator (for example, when optionally compiling function parameters).
-* **Including arbitrary/invaid code is impossible**. Horrible code practices such as starting a function in one #include and finishing it in another are syntactically impossible. 
-* **Rust inspired syntax** (as opposed to C; for a more civilised age).
+* TODO: Update and restore.
 
-### Why do I want a shader preprocessor at all
+### 1.2 Why do I want a shader preprocessor at all
 
 * TODO.
 
-## Propesed syntax additions
+## 2 MWGSL features
 
 This section describes proposed macros, which are syntactical additions to WGSL.
 
-### import
+### 2.1 import
 
 Brings named exports into the shader module.
 
 ```js
 import { EXPORT_NAME } from "file/path.mwgsl";
-import { EXPORT_NAME_1, EXPORT_NAME2_ } from "file/path.mwgsl";
+import { EXPORT_NAME_1, EXPORT_NAME_2 } from "file/path.mwgsl";
 ```
 
-### export
+### 2.2 export
 
 Indicates to other modules that listed exports can be imported.
 
@@ -44,162 +39,333 @@ Indicates to other modules that listed exports can be imported.
 export { EXPORT_NAME };
 ```
 
-### ...
+#### 2.2.1 Functions
 
-Spread macro. The key building block of MWGSL. Inserts the value passed to the macro during compilation into the shader.
-
-*Debate material: Should ... be implicit? Especially with if? macros*
-
-*Bikesheding material: Can be replaced with <- and renamed to "insert" macro*
+WGSL functions can be exported.
 
 ```js
-...(SPREADALE_MWGSL_OBJECT);
+// library.mwgsl
+
+function bar(a: f32) -> f32 {
+    return b + 1.0;
+}
+
+export { foo };
 ```
 
-### void!
-
-Represents nothing to spread. Only useful internally for if? macros.
+Dependencies of exported objects do not need to be exported separately.
 
 ```js
-...void!;
+// library.mwgsl
+
+function bar(a: f32) -> f32 {
+    return b + 1.0;
+}
+
+function foo(a: f32) -> f32 {
+    return bar(a + 1.0);
+}
+
+export { foo }; // MWGSL is aware of bar without it being exported or imported itself. Shall foo be imported into a module where another bar exists, the bar from module-scope of foo is used. No name conflicts occur.
+```
+
+Exported functions can depend on varialbes too.
+
+```js
+// library.mwgsl
+
+@group(0) @biding(0)
+var<uniform> b: f32;
+
+function foo(a: f32) -> f32 {
+    return a + b;
+}
+
+export { b /* b must be exported, this is explained in the section about variables */, foo };
+```
+
+#### 2.2.2 Variables
+
+Module-scope variables can be exported.
+
+```js
+// library.mwgsl
+
+@group(0) @biding(0)
+var<uniform> b: f32;
+
+export { b };
 ```
 
 ```js
-void! v = void!;
+// shader.mwgsl
 
-...v; // legal because it spreads nothing into the top level of the shader
-
-struct FragmentInput {
-    @builtin(front_facing) is_front: bool,
-    ...v, // legal because it spreads nothig into this struct
-};
+import { b } from "module.mwgsl";
 
 @fragment
-fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
-    ...v; // legal because it spreads nothing into the function body
-    var output_color: vec4<f32> = material.color;
-    return output_color;
+fn fragment() -> @location(0) vec4<f32> {
+    var color = vec4<f32>(b);
+    return color;
 }
 ```
 
-### struct!
+*Warning: A module scope variable with a @group or a @binding attribute must be exported to prevent blocking the binding in importing modules.*
 
-Returns a structure meant to be spread into regular WGSL structs.
+*Note: if MWGSL code is transpiled to WGSL there is a chance a variable can be renamed to resolve name collisions. It is advised that compilers do not rename variables that have @group and @binding attributes*
+
+*TODO: Describe a new attribute for preserving variable names during transpilation to vanilla WGSL.*
+
+##### 2.2.2.1 Resource variable uniqueness
+
+Objects that are or depend on different resource variables with same @group and @binfding attributes cannot be decalred or imported into the same module. Whether the resoruce variable is the same is determined based on whether it comes from the same module.
+
+###### 2.2.2.1.1 Example #1
 
 ```js
-struct! {
+// shader.mwgsl
+
+import { a /* b is @group(0) @binding(0) */ } from "module.mwgsl";
+
+@group(0) @biding(0)
+var<uniform> b: f32; // Illegal because a variable with the same @group and @binding is imported
+```
+
+Fix: Do not declare variables with the same @group(0) and @binding(0) atributes
+
+###### 2.2.2.1.2 Example #2
+
+```js
+// library.mwgsl
+
+@group(0) @biding(0)
+var<uniform> b: f32;
+
+function foo(a: f32) -> f32 {
+    return a + b;
+}
+
+export { b /* b must be exported */, foo };
+```
+
+```js
+// shader.mwgsl
+
+import { foo } from "library.mwgsl";
+
+@group(0) @biding(0)
+var<uniform> a: f32; // Illegal because foo depends on a variable with the same @group and @binding attributes
+```
+
+Fix: Import b instead and optinally alias it.
+
+```js
+// shader.mwgsl
+
+import { foo, b as a } from "library.mwgsl";
+```
+
+###### 2.2.2.1.3 Example #3
+
+```js
+// library_1.mwgsl
+
+@group(0) @biding(0)
+var<uniform> b: f32;
+
+function foo(a: f32) -> f32 {
+    return a + b;
+}
+
+export { b, foo };
+```
+
+```js
+// library_2.mwgsl
+
+@group(0) @biding(0)
+var<uniform> b: f32;
+
+function bar(a: f32) -> f32 {
+    return b + a;
+}
+
+export { b, bar };
+```
+
+```js
+// shader.mwgsl
+
+import { foo } from "library_1.mwgsl";
+import { bar } from "library_2.mwgsl"; // Illegal because both foo and bar depend on variables with the same @group and @binding attributes
+```
+
+Fix as a user: Choose between bar or foo. They are conflicting imports
+
+Fix as a library developer: Split the uniform into a separate module and import it in library_1 and library_2
+
+```js
+// library_uniforms.mwgsl
+
+@group(0) @biding(0)
+var<uniform> b: f32;
+
+export { b };
+```
+
+```js
+// library_1.mwgsl
+
+import { b } from "library_uniforms.mwgsl";
+
+function foo(a: f32) -> f32 {
+    return a + b;
+}
+
+export { foo }
+```
+
+```js
+// library_2.mwgsl
+
+import { b } from "library_uniforms.mwgsl";
+
+function bar(a: f32) -> f32 {
+    return b + a;
+}
+
+export { bar }
+```
+
+```js
+// shader.mwgsl
+
+import { b } from "library_uniforms.mwgsl"; // This line is optional if variable with @group(0) and @binding(0) is needed
+import { foo } from "library_1.mwgsl";
+import { bar } from "library_2.mwgsl";
+```
+
+#### 2.2.3 Structs
+
+Structures can be exported.
+
+```js
+// library.mwgsl
+
+struct VertexOutput {
     @location(0) world_position: vec4<f32>,
     @location(1) world_normal: vec3<f32>,
     @location(2) uv: vec2<f32>,
-};
+}
+
+export { VertexOutput };
 ```
 
-Can be spread into a WGSL struct like following:
+Imported structures can be used directly.
 
 ```js
-struct! params = struct! {
-    @location(0) world_position: vec4<f32>,
-    @location(1) world_normal: vec3<f32>,
-    @location(2) uv: vec2<f32>,
-};
+// shader.mwgsl
 
-struct FragmentInput {
-    @builtin(front_facing) is_front: bool,
-    ...params,
-};
-```
+import { VertexOutput } from "module.mwgsl";
 
-### scope!
+@vertex
+fn vertex(
+    @location(0) vertex_position: vec3<f32>,
+    @location(1) vertex_uv: vec2<f32>,
+) -> VertexOutput {
+    var out: VertexOutput;
+    out.uv = vertex_uv;
+    out.position = view.view_proj * vec4<f32>(vertex_position, 1.0);
+    return out;
+}
 
-Represents an WGSL scope and tokens inside it.
-
-```rs
-scope! s = scope! {
-    var a: f32 = 2.0;
-    var b: f32 = 2.0;
-};
-```
-
-```js
-fn foo () {
-    var a: f32 = 2.0;
-
-    scope! s = scope! {
-        var b: f32 = 2.0;
-        a += b;
-    };
-
-    ...s;
+@fragment
+fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
+    var color = vec4<f32>(0.0);
+    return color;
 }
 ```
 
-Scopes only make sense to be used in combinations with if?.
+Alternatively, structures can be spread into other structures.
+
+```js
+// shader.mwgsl
+
+import { VertexOutput } from "module.mwgsl";
+
+struct MyVertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    ...VertexOutput,
+}
+```
+
+### 2.3 @cfg
+
+Similarly to the cfg attibute in Rust, this attribute can mark definitions to be ignored. @cfg is executed at compile time and operates only on environment variables.
+
+*Note: Environment variables are set on the compiler programmatically and not within MWGSL code.*
+
+*Note: While there can in theory be a native MWGSL compiler, this is mainly meant for MWGSL to WGSL transpiers.*
+
+#### 2.3.1 @cfg import
+
+Imports can be made optional.
+
+*Debate: Should they?*
+
+```js
+@cfg(USE_FOO)
+import { foo } from "library.mwgsl";
+@cfg(!USE_FOO)
+import { bar as foo } from "library.mwgsl";
+```
+
+#### 2.3.2 @cfg var
+
+Variables can be declared optionally.
+
+```js
+@cfg(ZERO_IS_FLOAT) @group(0) @biding(0)
+var<uniform> a: f32;
+@cfg(!ZERO_IS_FLOAT) @group(0) @biding(0)
+var<uniform> a: i32;
+```
+
+#### 2.3.3 @cfg struct
+
+Structs can be declared optionally.
+
+```js
+@cfg(USE_MODULE_OUTPUT_STRUCT)
+import { VertexOutput as ModuleVO } from "module.mwgsl";
+
+@cfg(USE_MODULE_OUTPUT_STRUCT)
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    ...ModuleVO,
+}
+
+@cfg(!USE_MODULE_OUTPUT_STRUCT)
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) world_position: vec4<f32>,
+    @location(1) world_normal: vec3<f32>,
+    @location(2) uv: vec2<f32>,
+}
+```
+
+#### 2.3.4 @cfg scope
+
+Scopes can be made optional.
+
+*Note: This acts as compile time if statetent*
 
 ```js
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     var color = textureSample(texture, sampler, in.uv);
-    ...if? (COLORED) scope! {
+    @cfg(COLORED) {
         color = in.color * color;
-    } // if? returns the scope!, which is spread into the shader
+    } // This scope is ignored unless COLORED is present in compilation enviroment
     return color;
-}
-```
-
-*Note: scopes! can only be declared inside functions and therefore cannot be exported.*
-
-### var!
-
-Represents a variable definition. Mainly useful for resource definitions.
-
-```js
-var! view = var! {
-    @group(0) @binding(0)
-    var<uniform> t: f32;
-};
-
-export { view };
-```
-
-```js
-import { view } from "file/path.mwgsl";
-
-...view;
-@group(1) @binding(0)
-var<uniform> material: MaterialData;
-
-```
-
-### if? and else?
-
-Returns RETURN_VALUE to compilation if DEFINITION exists.
-
-*TODO: Decide how and whether more comparisions should be possible, such as comparing to numbers*
-
-```js
-if? (DEFINITION) RETURN_VALUE;
-```
-
-Returns RETURN_VALUE_1 to compilation if DEFINITION exists, otherwise returns RETURN_VALUE_2.
-
-```js
-if? (DEFINITION) RETURN_VALUE_1;
-else? RETURN_VALUE_2;
-```
-
-Executes macro code inside the {} block and returns the tail ("s" in this case) to compilation if DEFINITION exists, otherwise returns void!.
-
-```js
-fn foo() {
-    var a = 2.0;
-    ...if! (DEFINITION) {
-        scope! s = scope! {
-            // a WGSL function body
-            var b = 2.0;
-            a = a * b;
-        };
-
-        s
-    };
 }
 ```
