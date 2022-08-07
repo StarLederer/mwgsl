@@ -1,0 +1,6 @@
+import { Mesh2d } from "./mesh2d_types";
+
+@group(2) @binding(0)
+var<uniform> mesh: Mesh2d;
+
+export { mesh };

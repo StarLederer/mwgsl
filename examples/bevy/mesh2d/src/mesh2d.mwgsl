@@ -1,0 +1,63 @@
+import { view } from "./mesh2d_view_bindings.mwgsl";
+import { mesh } from "./mesh2d_bindings.mwgsl";
+import {
+    mesh2d_position_local_to_world,
+    mesh2d_position_world_to_clip,
+    mesh2d_normal_local_to_world,
+} from "./mesh2d_functions.mwgsl";
+@cfg(VERTEX_TANGENTS)
+import { mesh2d_tangent_local_to_world } from "./mesh2d_functions.mwgsl";
+import { VertexOutput as RequiredVO } from "./mesh2d_vertex_output.mwgsl";
+
+@cfg(VERTEX_TANGENTS)
+struct VertexTangents {
+    @location(3) tangent: vec4<f32>,
+}
+@cfg(!VERTEX_TANGENTS)
+struct VertexTangents {}
+
+@cfg(VERTEX_COLORS)
+struct VertexColors {
+    @location(4) color: vec4<f32>,
+}
+@cfg(!VERTEX_COLORS)
+struct VertexColors {}
+
+struct Vertex {
+    @location(0) position: vec3<f32>,
+    @location(1) normal: vec3<f32>,
+    @location(2) uv: vec2<f32>,
+    ...VertexTangents,
+    ...VertexColors,
+};
+
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    ...RequiredVO,
+}
+
+@vertex
+fn vertex(vertex: Vertex) -> VertexOutput {
+    var out: VertexOutput;
+    out.uv = vertex.uv;
+    out.world_position = mesh2d_position_local_to_world(mesh.model, vec4<f32>(vertex.position, 1.0));
+    out.clip_position = mesh2d_position_world_to_clip(out.world_position);
+    out.world_normal = mesh2d_normal_local_to_world(vertex.normal);
+    @cfg(VERTEX_TANGENTS) {
+        out.world_tangent = mesh2d_tangent_local_to_world(vertex.tangent);
+    }
+    @cfg(VERTEX_COLORS) {
+        out.color = vertex.color;
+    }
+    return out;
+}
+
+struct FragmentInput {
+    @builtin(front_facing) is_front: bool,
+    ...RequiredVO,
+};
+
+@fragment
+fn fragment(in: FragmentInput) -> @location(0) vec4<f32> {
+    return vec4<f32>(1.0, 0.0, 1.0, 1.0);
+}
