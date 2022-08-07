@@ -1,6 +1,6 @@
 # MWGSL
 
-Modular WGSL. A superset of WGSL that introduces syntax that allows developers to split WGSL and share parts between different files as well as some new useful attributes such as @cfg. While in theory this language can be compiled natively, it is mainly designed to be bundled and transpiled into vanilla WGSL.This document describes a different version of the language that was presented recently. The original document can be found in the ./drafts directory.
+Modular WGSL. A superset of WGSL that introduces syntax that allows developers to split WGSL and share parts between different files as well as some new useful attributes such as @cfg to help you build statically-analyzed DRY shader programs. While in theory this language can be compiled natively, it is mainly designed to be bundled and transpiled into vanilla WGSL.This document describes a different version of the language that was presented recently. The original document can be found in the ./drafts directory.
 
 *Note: This document is works in progress.*
 
