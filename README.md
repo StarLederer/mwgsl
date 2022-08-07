@@ -20,7 +20,7 @@ This language is inspired by commonly used C-like shader preprocessors and by th
 
 ## 2 MWGSL features
 
-This section describes proposed macros, which are syntactical additions to WGSL.
+This section describes proposed syntactical additions to WGSL.
 
 ### 2.1 import
 
