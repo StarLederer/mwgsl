@@ -39,7 +39,9 @@ Indicates to other modules that listed exports can be imported.
 export { EXPORT_NAME };
 ```
 
-#### 2.2.1 Functions
+### 2.3 Exportable objects
+
+#### 2.3.1 Functions
 
 WGSL functions can be exported.
 
@@ -84,7 +86,7 @@ function foo(a: f32) -> f32 {
 export { b /* b must be exported, this is explained in the section about variables */, foo };
 ```
 
-#### 2.2.2 Variables
+#### 2.3.2 Variables
 
 Module-scope variables can be exported.
 
@@ -115,11 +117,11 @@ fn fragment() -> @location(0) vec4<f32> {
 
 *TODO: Describe a new attribute for preserving variable names during transpilation to vanilla WGSL.*
 
-##### 2.2.2.1 Resource variable uniqueness
+##### 2.3.2.1 Resource variable uniqueness
 
 Objects that are or depend on different resource variables with same @group and @binfding attributes cannot be decalred or imported into the same module. Whether the resoruce variable is the same is determined based on whether it comes from the same module.
 
-###### 2.2.2.1.1 Example #1
+###### 2.3.2.1.1 Example #1
 
 ```js
 // shader.mwgsl
@@ -132,7 +134,7 @@ var<uniform> b: f32; // Illegal because a variable with the same @group and @bin
 
 Fix: Do not declare variables with the same @group(0) and @binding(0) atributes
 
-###### 2.2.2.1.2 Example #2
+###### 2.3.2.1.2 Example #2
 
 ```js
 // library.mwgsl
@@ -164,7 +166,7 @@ Fix: Import b instead and optinally alias it.
 import { foo, b as a } from "library.mwgsl";
 ```
 
-###### 2.2.2.1.3 Example #3
+###### 2.3.2.1.3 Example #3
 
 ```js
 // library_1.mwgsl
@@ -244,7 +246,7 @@ import { foo } from "library_1.mwgsl";
 import { bar } from "library_2.mwgsl";
 ```
 
-#### 2.2.3 Structs
+#### 2.3.3 Structs
 
 Structures can be exported.
 
@@ -298,7 +300,7 @@ struct MyVertexOutput {
 }
 ```
 
-### 2.3 @cfg
+### 2.4 @cfg
 
 Similarly to the cfg attibute in Rust, this attribute can mark definitions to be ignored. @cfg is executed at compile time and operates only on environment variables.
 
@@ -306,7 +308,7 @@ Similarly to the cfg attibute in Rust, this attribute can mark definitions to be
 
 *Note: While there can in theory be a native MWGSL compiler, this is mainly meant for MWGSL to WGSL transpiers.*
 
-#### 2.3.1 @cfg import
+#### 2.4.1 @cfg import
 
 Imports can be made optional.
 
@@ -319,7 +321,7 @@ import { foo } from "library.mwgsl";
 import { bar as foo } from "library.mwgsl";
 ```
 
-#### 2.3.2 @cfg var
+#### 2.4.2 @cfg var
 
 Variables can be declared optionally.
 
@@ -330,7 +332,7 @@ var<uniform> a: f32;
 var<uniform> a: i32;
 ```
 
-#### 2.3.3 @cfg struct
+#### 2.4.3 @cfg struct
 
 Structs can be declared optionally.
 
@@ -353,7 +355,7 @@ struct VertexOutput {
 }
 ```
 
-#### 2.3.4 @cfg scope
+#### 2.4.4 @cfg scope
 
 Scopes can be made optional.
 
@@ -369,3 +371,55 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     return color;
 }
 ```
+
+## 3 Experimental features
+
+This section describes controversial and experimental features that might be poorly designed or there might be opposition for. These features are to be migrated or removed after debates are complete.
+
+### 3.1 Optional/named parameters
+
+Function parameters can be made optional if marked with "?".
+
+```js
+fn foo(a: f32, b?: f32, c?: f32) {}
+
+fn bar() {
+    foo(0.0); // Legal
+    foo(0.0, 0.0); // Legal
+    foo(0.0, 0.0, 0.0); // Legal
+}
+```
+
+To omit arbitrary parameters they can be passed by names.
+
+```js
+fn foo(a: f32, b?: u8, c?: f32) {}
+
+fn bar() {
+    foo(0.0, c: 0.0); // Legal
+    foo(a: 0.0, b: 0); // Legal
+    foo(a: 0.0, b: 0, c: 0.0); // Legal
+}
+```
+
+Optional parameters can only be used in scopes with a @has attribute.
+
+```js
+fn add_mul(a: f32, add?: f32, multiply?: f32) -> f32 {
+    var res: f32 = a;
+
+    @has(add) {
+        res = res + add;
+    }
+
+    @has(multiply) {
+        res = res * multiply;
+    }
+
+    return res;
+}
+```
+
+*Warning: Entry points such as @vertex and @fragmentcannot have optional parameters.*
+
+*Note: This feature can cause a lot of variants if transpiled to WGSL. It is strongly recommended that developer tools provide insight into how many variants need to be generated in transpilation.*
