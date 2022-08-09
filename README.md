@@ -420,6 +420,6 @@ fn add_mul(a: f32, add?: f32, multiply?: f32) -> f32 {
 }
 ```
 
-*Warning: Entry points such as @vertex and @fragmentcannot have optional parameters.*
+*Warning: Entry points such as @vertex and @fragment cannot have optional parameters.*
 
 *Note: This feature can cause a lot of variants if transpiled to WGSL. It is strongly recommended that developer tools provide insight into how many variants need to be generated in transpilation.*
