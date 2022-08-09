@@ -39,7 +39,9 @@ Indicates to other modules that listed exports can be imported.
 export { EXPORT_NAME };
 ```
 
-### 2.3 Exportable objects
+### 2.3 Sharable objects
+
+This section describes WGSL objects that can be shader between modules.
 
 #### 2.3.1 Functions
 
