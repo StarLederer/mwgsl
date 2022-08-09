@@ -1,0 +1,18 @@
+/*
+ * Adds, then multiplies, like that time you did when your friend asked what's 2 + 2 * 2
+ */
+fn add_mul(a: f32, add?: f32, multiply?: f32) -> f32 {
+    var res: f32 = a;
+
+    @has(add) {
+        res = res + add;
+    }
+
+    @has(multiply) {
+        res = res * multiply;
+    }
+
+    return res;
+}
+
+export { add_mul };

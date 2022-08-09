@@ -1,0 +1,15 @@
+import { add_mul } from "./lib.mwgsl";
+
+fn main() {
+    add_mul(2.0, 2.0, 2.0); // 8.0
+
+    // omit parameters from the end
+    add_mul(2.0, 2.0); // 4.0
+    add_mul(2.0); // 2.0
+
+    // named parameters
+    add_mul(2.0, multiply: 3.0); // 6.0
+    add_mul(a: 2.0, multiply: 3.0); // 6.0
+
+    add_mul(a: 2.0, add: 1.0, multiply: 0.5); // 1.5
+}

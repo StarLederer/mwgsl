@@ -1,0 +1,9 @@
+/*
+ * @file is useful to demonstrate that unused variants can be removed when transpiling to WGSL.
+ */
+
+import { add_mul } from "./lib.mwgsl";
+
+fn main() {
+    add_mul(a: 2.0, multiply: 2.0);
+}
