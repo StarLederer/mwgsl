@@ -41,7 +41,7 @@ export { EXPORT_NAME };
 
 ### 2.3 Sharable objects
 
-This section describes WGSL objects that can be shader between modules.
+This section describes WGSL objects that can be shared between modules.
 
 #### 2.3.1 Functions
 
@@ -128,7 +128,7 @@ Objects that are or depend on different resource variables with same @group and 
 ```js
 // shader.mwgsl
 
-import { a /* b is @group(0) @binding(0) */ } from "module.mwgsl";
+import { a /* a is @group(0) @binding(0) */ } from "module.mwgsl";
 
 @group(0) @biding(0)
 var<uniform> b: f32; // Illegal because a variable with the same @group and @binding is imported
@@ -250,7 +250,7 @@ import { bar } from "library_2.mwgsl";
 
 #### 2.3.3 Structs
 
-Structures can be exported.
+Structs can be exported.
 
 ```js
 // library.mwgsl
@@ -264,7 +264,7 @@ struct VertexOutput {
 export { VertexOutput };
 ```
 
-Imported structures can be used directly.
+Imported structs can be used directly.
 
 ```js
 // shader.mwgsl
@@ -289,7 +289,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
 }
 ```
 
-Alternatively, structures can be spread into other structures.
+Alternatively, structs can be spread into other structs.
 
 ```js
 // shader.mwgsl
