@@ -8,12 +8,12 @@ Modular WGSL. A superset of WGSL that introduces syntax that allows developers t
 
 ## 1 Motivation
 
-This language is inspired by commonly used C-like shader preprocessors and by the mistakes those preproocessors make. MWGSL is intended to achieve the same end result and replace C-like preprocessors but with a better DX and a modern, robust and Rust-like approach. This language also learns from the operation of ECMAScript bundlers such as [ESBuild](https://esbuild.github.io/) since they solve an almost identical problem and do it in a very developer-friendly way.
+This language is inspired by commonly used C-like shader preprocessors and by the mistakes those preproocessors make. MWGSL is intended to achieve the same end result and replace C-like preprocessors but with a better DX and a modern, robust and Rust-like approach. This language also learns from the operation of ECMAScript bundlers such as [ESBuild](https://esbuild.github.io/) since they solve an almost identical problem, as well as some of the [12 factors](https://12factor.net).
 
 ### 1.1 Why do I want MWGSL over a C-like preprocessor
 
 * **Named imports instead of file inclusion.** This means you have the ability to filter and alias what you import and avoid unwanted and unexpected code insertions into your programs.
-* **Module-scope identifier names.** Dependencies of imported objects exist in their original module scope and do not conflict with other imported or user defined indetifiers making it effortless to name things in your code.
+* **Module isolation.** In [12-factor](https://12factor.net/dependencies) manner, dependencies of imported objects are isolated in their original module scope and do not conflict with other imported or user defined obects making it effortless to name and define things in your code.
 * **Principaled resource import.** MWGSL forbids redeclaration and double import of resource variables (@group(n) @binding(n)) and forces module develoeprs to export resource variables they use to prevent them from being blocked off from you.
 * **Environment variables** Defines are unpredictable and prone to unexpected collisions due to their global compile-time nature, that is why MWGSL uses environment variables instead. In [12-factor](https://12factor.net/config) manner, shaders cannot define environemnt variables but they must declare dependence on them. This prevents any unexpected compile time changes or errors when you write code.
 * **Config attribute** Like #ifdef, MWGSL has a #[cfg] attribute that can mark imports, declarations, struct entries and scopes as optional. Unlike #ifdef, however, #[cfg] takes advantage of existing syntax to make writing invalid code impossible. As a bonus, optional scopes behave closer to an actual WGSL if statements by scoping tokens together.
