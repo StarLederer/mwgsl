@@ -39,7 +39,7 @@ fn mesh2d_normal_local_to_world(vertex_normal: vec3<f32>) -> vec3<f32> {
     ) * vertex_normal;
 }
 
-// @cfg(VERTEX_TANGENTS) true
+// #[cfg(VERTEX_TANGENTS) true
 fn mesh2d_tangent_local_to_world(model: mat4x4<f32>, vertex_tangent: vec4<f32>) -> vec4<f32> {
     return vec4<f32>(
         mat3x3<f32>(
@@ -55,9 +55,9 @@ struct Vertex {
     @location(0) position: vec3<f32>,
     @location(1) normal: vec3<f32>,
     @location(2) uv: vec2<f32>,
-    // @cfg(VERTEX_TANGENTS) true
+    // #[cfg(VERTEX_TANGENTS) true
     @location(3) tangent: vec4<f32>,
-    // @cfg(VERTEX_COLORS) true
+    // #[cfg(VERTEX_COLORS) true
     @location(4) color: vec4<f32>,
 };
 
@@ -66,9 +66,9 @@ struct VertexOutput {
     @location(0) world_position: vec4<f32>,
     @location(1) world_normal: vec3<f32>,
     @location(2) uv: vec2<f32>,
-    // @cfg(VERTEX_TANGENTS) true
+    // #[cfg(VERTEX_TANGENTS) true
     @location(3) world_tangent: vec4<f32>,
-    // @cfg(VERTEX_COLORS) true
+    // #[cfg(VERTEX_COLORS) true
     @location(4) color: vec4<f32>,
 }
 
@@ -79,9 +79,9 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     out.world_position = mesh2d_position_local_to_world(mesh.model, vec4<f32>(vertex.position, 1.0));
     out.clip_position = mesh2d_position_world_to_clip(out.world_position);
     out.world_normal = mesh2d_normal_local_to_world(vertex.normal);
-    // @cfg(VERTEX_TANGENTS) true
+    // #[cfg(VERTEX_TANGENTS)] true
     out.world_tangent = mesh2d_tangent_local_to_world(vertex.tangent);
-    // @cfg(VERTEX_COLORS) true
+    // #[cfg(VERTEX_COLORS)] true
     out.color = vertex.color;
     return out;
 }
@@ -91,9 +91,9 @@ struct FragmentInput {
     @location(0) world_position: vec4<f32>,
     @location(1) world_normal: vec3<f32>,
     @location(2) uv: vec2<f32>,
-    // @cfg(VERTEX_TANGENTS) true
+    // #[cfg(VERTEX_TANGENTS)] true
     @location(3) world_tangent: vec4<f32>,
-    // @cfg(VERTEX_COLORS) true
+    // #[cfg(VERTEX_COLORS)] true
     @location(4) color: vec4<f32>,
 };
 

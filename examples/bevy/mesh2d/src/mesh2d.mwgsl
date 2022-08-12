@@ -5,23 +5,19 @@ import {
     mesh2d_position_world_to_clip,
     mesh2d_normal_local_to_world,
 } from "./mesh2d_functions.mwgsl";
-@cfg(VERTEX_TANGENTS)
+#[cfg(VERTEX_TANGENTS)]
 import { mesh2d_tangent_local_to_world } from "./mesh2d_functions.mwgsl";
 import { VertexOutput as RequiredVO } from "./mesh2d_vertex_output.mwgsl";
 
-@cfg(VERTEX_TANGENTS)
 struct VertexTangents {
+    #[cfg(VERTEX_TANGENTS)]
     @location(3) tangent: vec4<f32>,
 }
-@cfg(!VERTEX_TANGENTS)
-struct VertexTangents {}
 
-@cfg(VERTEX_COLORS)
 struct VertexColors {
+    #[cfg(VERTEX_COLORS)]
     @location(4) color: vec4<f32>,
 }
-@cfg(!VERTEX_COLORS)
-struct VertexColors {}
 
 struct Vertex {
     @location(0) position: vec3<f32>,
@@ -43,10 +39,10 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     out.world_position = mesh2d_position_local_to_world(mesh.model, vec4<f32>(vertex.position, 1.0));
     out.clip_position = mesh2d_position_world_to_clip(out.world_position);
     out.world_normal = mesh2d_normal_local_to_world(vertex.normal);
-    @cfg(VERTEX_TANGENTS) {
+    #[cfg(VERTEX_TANGENTS)] {
         out.world_tangent = mesh2d_tangent_local_to_world(vertex.tangent);
     }
-    @cfg(VERTEX_COLORS) {
+    #[cfg(VERTEX_COLORS)] {
         out.color = vertex.color;
     }
     return out;
