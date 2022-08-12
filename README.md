@@ -302,53 +302,124 @@ struct MyVertexOutput {
 }
 ```
 
-### 2.4 @cfg
 
-Similarly to the cfg attibute in Rust, this attribute can mark definitions to be ignored. @cfg is executed at compile time and operates only on environment variables.
+### 2.4 Environment variables
+
+#### 2.4.1 #[env]
+
+Compile-time environemnt variables can be declared as dependencies of structs and functions.
+
+```js
+// library.mwgsl
+
+#[env(COLORED: bool, "Toggles usage of vertex colors")]
+struct VertexInput = {
+    // Compile time attributes can use TOGGLE here 
+}
+
+#[env(TOGGLE: bool, "Toggles optional behaviour")]
+fn foo() {
+    // Compile time attributes can use TOGGLE here 
+}
+
+export { foo, VertexOutput };
+```
+
+Environment dependencies can be accessed by compile-time attributes by the variable's identifier.
+
+```js
+// shader.mwgsl
+
+import { VertexOutput } from "module.mwgsl";
+
+@group(1) @binding(0)
+var texture: texture_2d<f32>;
+@group(1) @binding(1)
+var sampler: sampler;
+
+@fragment
+fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
+    var color = textureSample(texture, sampler, in.uv);
+    #[cfg(VertexOutput.COLORED)] { // Marks scopes as optional. See next section
+        color = in.color * color;
+    }
+    return color;
+}
+```
+
+MWGSL compilers shall require the user to define environment variables found in the entry file and its dependencies.
+
+```rs
+use mwgsl::compiler::compile;
+use std::collections::HashMap;
+
+fn main() {
+    let mut environemnt = HashMap::new();
+    environemnt.insert(
+        "COLORED".to_string(),
+        true.to_string(),
+    );
+    compile("path/to/shader.mwgsl", Some(environemnt)).unwrap(); // Shall succeed
+}
+```
+
+```rs
+use mwgsl::compiler::compile;
+
+fn main() {
+    compile("path/to/shader.mwgsl", None).unwrap(); // Shall fail with a message similar to "Could not compile /absolute/path/to/shader.mwgsl. COLORED variable was required by the file but not found in the environment. Please pass a HashMap with the listed environemnt variable to the compile function."
+}
+```
+
+#### 2.4.2 #[cfg]
+
+Similarly to the cfg attibute in Rust, this attribute can mark objects to be ignored. cfg is executed at compile time and operates only on environment variables.
+
+*Bikeshedding material: Should MWGSL @ syntax be used instead?*
 
 *Note: Environment variables are set on the compiler programmatically and not within MWGSL code.*
 
 *Note: While there can in theory be a native MWGSL compiler, this is mainly meant for MWGSL to WGSL transpiers.*
 
-#### 2.4.1 @cfg import
+##### 2.4.1 #[cfg] import
 
 Imports can be made optional.
 
-*Debate: Should they?*
-
 ```js
-@cfg(USE_FOO)
+#[cfg(USE_FOO)]
 import { foo } from "library.mwgsl";
-@cfg(!USE_FOO)
+#[@cfg(!USE_FOO)]
 import { bar as foo } from "library.mwgsl";
 ```
 
-#### 2.4.2 @cfg var
+##### 2.4.2 #[cfg] var
 
 Variables can be declared optionally.
 
 ```js
-@cfg(ZERO_IS_FLOAT) @group(0) @biding(0)
+#[cfg(ZERO_IS_FLOAT)]
+@group(0) @biding(0)
 var<uniform> a: f32;
-@cfg(!ZERO_IS_FLOAT) @group(0) @biding(0)
+#[cfg(!ZERO_IS_FLOAT)]
+@group(0) @biding(0)
 var<uniform> a: i32;
 ```
 
-#### 2.4.3 @cfg struct
+##### 2.4.3 #[cfg] struct
 
 Structs can be declared optionally.
 
 ```js
-@cfg(USE_MODULE_OUTPUT_STRUCT)
+#[cfg(USE_MODULE_OUTPUT_STRUCT)]
 import { VertexOutput as ModuleVO } from "module.mwgsl";
 
-@cfg(USE_MODULE_OUTPUT_STRUCT)
+#[cfg(USE_MODULE_OUTPUT_STRUCT)]
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     ...ModuleVO,
 }
 
-@cfg(!USE_MODULE_OUTPUT_STRUCT)
+#[cfg(!USE_MODULE_OUTPUT_STRUCT)]
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) world_position: vec4<f32>,
@@ -357,21 +428,38 @@ struct VertexOutput {
 }
 ```
 
-#### 2.4.4 @cfg scope
+Struct fileds can be added optonally.
+
+```js
+struct VertexOutput {
+    @location(0) world_position: vec4<f32>,
+    @location(1) world_normal: vec3<f32>,
+    @location(2) uv: vec2<f32>,
+    #[cfg(VERTEX_TANGENTS)]
+    @location(3) world_tangent: vec4<f32>,
+    #[cfg(VERTEX_COLORS)]
+    @location(4) color: vec4<f32>,
+}
+```
+
+##### 2.4.4 #[cfg] scope
 
 Scopes can be made optional.
 
 *Note: This acts as compile time if statetent*
 
 ```js
+#[env(COLORED: bool)]
 @fragment
 fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     var color = textureSample(texture, sampler, in.uv);
-    @cfg(COLORED) {
+    #[cfg(COLORED)] {
         color = in.color * color;
     } // This scope is ignored unless COLORED is present in compilation enviroment
     return color;
 }
+
+export { fragment };
 ```
 
 ## 3 Experimental features
@@ -404,17 +492,17 @@ fn bar() {
 }
 ```
 
-Optional parameters can only be used in scopes with a @has attribute.
+Optional parameters can only be used in scopes with a #[has] attribute.
 
 ```js
 fn add_mul(a: f32, add?: f32, multiply?: f32) -> f32 {
     var res: f32 = a;
 
-    @has(add) {
+    #[has(add)] {
         res = res + add;
     }
 
-    @has(multiply) {
+    #[has(multiply)] {
         res = res * multiply;
     }
 
@@ -425,3 +513,67 @@ fn add_mul(a: f32, add?: f32, multiply?: f32) -> f32 {
 *Warning: Entry points such as @vertex and @fragment cannot have optional parameters.*
 
 *Note: This feature can cause a lot of variants if transpiled to WGSL. It is strongly recommended that developer tools provide insight into how many variants need to be generated in transpilation.*
+
+### 3.2 The "environment variable container (EVC)" pattern
+
+Dependence on environment variables is inherited, developers might therefore use the following pattern to group varaibles together and reuse them across modules.
+
+```js
+// pbr_options.mwgsl
+
+// Code repetition
+#[env(COLORED: bool, "Toggles usage of vertex colors")]
+#[env(IRIDESCENT: bool, "Toggles usage of iridescence")]
+#[env(ANISOTROPIC: bool, "Toggles usage of anisotropy")]
+#[env(EMISSIVE: bool, "Toggles usage of emissive colors")]
+struct PBROptions {}
+
+fn use_pbr_options(options?: PBROptions) {}
+
+export { PBROptions, use_pbr_options };
+```
+
+```js
+// pbr_lib.mwgsl
+
+import { PBROptions, use_pbr_options } from "pbr_options.mwgsl";
+
+struct VertexInput = {
+    ...PBROptions, // spreads nothing but gives access to PBROptions environment dependencies.
+    #[cfg(PBROptions.COLORED)]
+    @location(0) color: vec4<f32>,
+    // ...
+}
+
+fn calculate_pbr_lighting(/* ... */) -> vec4<f32> {
+    use_pbr_options(); // Does nothing but gives access to use_pbr_options environment dependencies.
+
+    var color = vec4<f32>(1.0);
+
+    // ...
+
+    #[cfg(usePBROptions.COLORED)] {
+        // ...
+    }
+
+    #[cfg(usePBROptions.IRIDESCENT)] {
+        // ...
+    }
+
+    #[cfg(usePBROptions.ANISOTROPIC)] {
+        // ...
+    }
+
+    #[cfg(usePBROptions.EMISSIVE)] {
+        // ...
+    }
+
+    // ...
+
+    return color;
+}
+
+export { VertexInput, calculate_pbr_lighting };
+```
+
+Unlike other experimental features, the EVC pattern is almost possible with the existing syntax (requires optional variables), however, it is debatable whether it should be allowed or measures should be taken to forbid it. Or perhaps the opposite, maybe it should gain first-class spport?
