@@ -66,5 +66,5 @@ fn prepare_normal(
 }
 
 export {
-    prepare_normal, // Exports 
+    prepare_normal, // Exports with VERTEX_TANGENTS, STANDARDMATERIAL_NORMAL_MAP and VERTEX_UVS dependencies
 };
