@@ -22,7 +22,11 @@ This language is inspired by commonly used C-like shader preprocessors and by th
 
 ### 1.2 Why do I want a shader preprocessor at all
 
-* TODO.
+* **Maintainability.** Although shader programs tend to be short, they sometimes span across over a thousand lines of code and cover many isolated mechanisms. The community demonstrates (e.g. [Bevy](https://github.com/bevyengine/bevy/tree/main/crates/bevy_pbr/src/render)) that maintaining extensive shaders like these requires breaking them up into multipe files.
+* **Reusability.** Most game engines include PBR rendering systems, however, it is often required to modify or add to the engine's shaders to achieve certain art directions. Many engines (e.g. [Unity](https://unity.com/features/shader-graph), [Bevy](https://docs.rs/bevy/0.8.0/bevy/pbr/trait.Material.html)) offer mechanisms to reuse built-in logic in user written shaders.
+* **Shader variants.** Branching logic on the GPU is limited ([Bolas, 2016](https://stackoverflow.com/a/37837060)), as a result, compile-time static if statements are often used to generate different shader varants.
+
+*WARNING: The list above is WIP.*
 
 ## 2 MWGSL features
 
