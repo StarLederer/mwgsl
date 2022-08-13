@@ -336,7 +336,7 @@ Environment dependencies can be accessed by compile-time attributes by the varia
 ```js
 // shader.mwgsl
 
-import { VertexOutput } from "module.mwgsl";
+import { VertexOutput } from "library.mwgsl";
 
 @group(1) @binding(0)
 var texture: texture_2d<f32>;
@@ -349,6 +349,40 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     #[cfg(VertexOutput.COLORED)] { // Marks scopes as optional. See next section
         color = in.color * color;
     }
+    return color;
+}
+```
+
+Environment variables can be aliased upon import. This can be used to resolve name conflicts when importing objects.
+
+```js
+// library_1.mwgsl
+
+#[env(COLORED: bool, "Option that means something")]
+struct Structure1 = {
+    // ...
+}
+```
+
+```js
+// library_2.mwgsl
+
+#[env(COLORED: bool, "Option that means something different")]
+struct Structure2 = {
+    // ...
+}
+```
+
+```js
+// shader.mwgsl
+
+#[env_alias(COLORED, VERTEX_COLORS)]
+import { Structure1 } from "library_1.mwgsl";
+#[env_alias(COLORED, TINT)]
+import { Structure2 } from "library_2.mwgsl";
+
+fn foo(one: Structure1, other: Structure2) {
+    // foo depends on VERTEX_COLORS and TINT
     return color;
 }
 ```
@@ -373,7 +407,7 @@ fn main() {
 use mwgsl::compiler::compile;
 
 fn main() {
-    compile("path/to/shader.mwgsl", None).unwrap(); // Shall fail with a message similar to "Could not compile /absolute/path/to/shader.mwgsl. COLORED variable was required by the file but not found in the environment. Please pass a HashMap with the listed environemnt variable to the compile function."
+    compile("path/to/shader.mwgsl", None).unwrap(); // Shall fail with a message similar to "Could not compile /absolute/path/to/shader.mwgsl. VERTEX_COLORS and TINT variables were required by the file but not found in the environment. Please pass a HashMap with the listed environemnt variables to the compile function."
 }
 ```
 
@@ -398,22 +432,9 @@ import { foo } from "library.mwgsl";
 import { bar as foo } from "library.mwgsl";
 ```
 
-##### 2.4.2 #[cfg] var
+##### 2.4.2 #[cfg] struct
 
-Variables can be declared optionally.
-
-```js
-#[cfg(ZERO_IS_FLOAT)]
-@group(0) @biding(0)
-var<uniform> a: f32;
-#[cfg(!ZERO_IS_FLOAT)]
-@group(0) @biding(0)
-var<uniform> a: i32;
-```
-
-##### 2.4.3 #[cfg] struct
-
-Structs can be declared optionally.
+Structs and can be declared optionally.
 
 ```js
 #[cfg(USE_MODULE_OUTPUT_STRUCT)]
@@ -446,6 +467,22 @@ struct VertexOutput {
     #[cfg(VERTEX_COLORS)]
     @location(4) color: vec4<f32>,
 }
+```
+
+##### 2.4.2 #[cfg] function parameter
+
+Similarly to struct fields, function parameters can be marked as optional.
+
+```js
+fn foo(
+    @location(0) world_position: vec4<f32>,
+    @location(1) world_normal: vec3<f32>,
+    @location(2) uv: vec2<f32>,
+    #[cfg(VERTEX_TANGENTS)]
+    @location(3) world_tangent: vec4<f32>,
+    #[cfg(VERTEX_COLORS)]
+    @location(4) color: vec4<f32>,
+) {}
 ```
 
 ##### 2.4.4 #[cfg] scope
@@ -583,3 +620,23 @@ export { VertexInput, calculate_pbr_lighting };
 ```
 
 Unlike other experimental features, the EVC pattern is almost possible with the existing syntax (requires optional variables), however, it is debatable whether it should be allowed or measures should be taken to forbid it. Or perhaps the opposite, maybe it should gain first-class spport?
+
+### 3.3 #[cfg] declarations
+
+Any definition can be marked as optional.
+
+```js
+#[cfg(ZERO_IS_FLOAT)]
+@group(0) @biding(0)
+var<uniform> a: f32;
+#[cfg(!ZERO_IS_FLOAT)]
+@group(0) @biding(0)
+var<uniform> a: i32;
+```
+
+```js
+#[cfg(FOO_IS_USED)]
+fn foo() {}
+```
+
+This feature does not add any value. Definitions can just be exported optionally or elliminated at compile time automatically.
