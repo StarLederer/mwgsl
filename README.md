@@ -1,6 +1,6 @@
 # MWGSL
 
-Modular WGSL. A superset of WGSL that introduces syntax that allows developers to split WGSL and share parts between different files as well as some new useful attributes such as @cfg to help you build statically-analyzed DRY shader programs. While in theory this language can be compiled natively, it is mainly designed to be bundled and transpiled into vanilla WGSL.This document describes a different version of the language that was presented recently. The original document can be found in the ./drafts directory.
+Modular WGSL. A superset of WGSL that allows developers to break the code up and share it between modules, as well as adds new attributes such as #[env] and #[cfg] that help building DRY statically-analyzed shader programs with compile-time superpowers. While in theory this language can be compiled natively, it is mainly designed to be bundled and transpiled into vanilla WGSL.
 
 *Note: This document is works in progress.*
 
@@ -25,8 +25,6 @@ This language is inspired by commonly used C-like shader preprocessors and by th
 * **Maintainability.** Although shader programs tend to be short, they sometimes span across over a thousand lines of code and cover many isolated mechanisms. The community demonstrates (e.g. [Bevy](https://github.com/bevyengine/bevy/tree/main/crates/bevy_pbr/src/render)) that maintaining extensive shaders like these requires breaking them up into multipe files.
 * **Reusability.** Most game engines include PBR rendering systems, however, it is often required to modify or add to the engine's shaders to achieve certain art directions. Many engines (e.g. [Unity](https://unity.com/features/shader-graph), [Bevy](https://docs.rs/bevy/0.8.0/bevy/pbr/trait.Material.html)) offer mechanisms to reuse built-in logic in user written shaders.
 * **Shader variants.** Branching logic on the GPU is limited ([Bolas, 2016](https://stackoverflow.com/a/37837060)), as a result, compile-time static if statements are often used to generate different shader varants.
-
-*WARNING: The list above is WIP.*
 
 ## 2 MWGSL features
 
