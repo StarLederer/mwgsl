@@ -1,6 +1,6 @@
 # MWGSL
 
-Modular WGSL. A superset of WGSL that allows developers to break the code up and share it between modules, as well as adds new attributes such as #[env] and #[cfg] that help building DRY statically-analyzed shader programs with compile-time superpowers. While in theory this language can be compiled natively, it is mainly designed to be bundled and transpiled into vanilla WGSL.
+Modular WGSL. A superset of WGSL that allows developers to break the code up and share it between modules, as well as adds new attributes such as #[env] and #[cfg] that help build DRY statically-analyzed shaders with compile-time superpowers. While in theory this language can be compiled natively, it is mainly designed to be bundled and transpiled into vanilla WGSL.
 
 *Note: This document is works in progress.*
 
